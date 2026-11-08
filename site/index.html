@@ -21,6 +21,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .top .grow{flex:1 1 auto;min-width:0}
 .mute{color:var(--mute);font-size:14px}
 .warn{color:var(--warn)}
+.hl{color:var(--warn);font-weight:800;text-decoration:underline;text-underline-offset:3px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
 .ask{background:var(--soft);border-radius:10px;padding:12px 14px;font-weight:600}
 details.std{margin:0 0 12px}
@@ -112,7 +113,8 @@ let lang=store.get("v4.lang")||"cn",user=store.get("v4.user")||"",answers={},cur
 const t=()=>T[lang];
 const h=(tag,props,...kids)=>{const e=document.createElement(tag);for(const k in props||{}){if(k==="class")e.className=props[k];else if(k.startsWith("on"))e[k]=props[k];else if(props[k]!==false&&props[k]!=null)e.setAttribute(k,props[k])}for(const c of kids)if(c!=null)e.append(c);return e};
 const table=(heads,rows)=>h("div",{class:"wrap"},h("table",null,h("thead",null,h("tr",null,...heads.map(x=>h("th",{scope:"col"},x)))),h("tbody",null,...rows.map(r=>h("tr",null,...r.map((c,i)=>h("td",null,i?c:h("b",null,c))))))));
-function standard(part){const L=t();return h("details",{class:"card std"},h("summary",null,L.std),
+const emph=s=>s.split(/(unsafe)/).map(x=>x==="unsafe"?h("strong",{class:"hl"},x):x);
+function standard(part){const L=t();return h("details",{class:"card std"},h("summary",null,...emph(L.std)),
   table([L.rule,L.met,L.notMet],L.rules.filter((_,k)=>part===1||k!==1)),
   h("h2",null,L.harmTitle),table([L.kind,L.desc],L.harms),
   h("h2",null,L.negTitle),table([L.kind,L.desc],L.negs),
@@ -169,7 +171,7 @@ function download(){
 function login(){
   const L=t();const input=h("input",{id:"name",value:user,placeholder:L.namePh,autocomplete:"off"});const err=h("p",{class:"warn",role:"alert"});
   return h("div",{class:"login"},h("div",{class:"top"},h("h1",{class:"grow"},L.title),langBtn()),
-    h("div",{class:"ask",style:"margin:12px 0"},L.part(1)+"（1–"+PART1+"）: "+L.ask[0]),
+    h("div",{class:"ask",style:"margin:12px 0"},L.part(1)+"（1–"+PART1+"）: ",...emph(L.ask[0])),
     h("div",{class:"ask",style:"margin:12px 0"},L.part(2)+"（"+(PART1+1)+"–"+ITEMS.length+"）: "+L.ask[1]),
     h("p",{class:"mute"},L.warn),standard(1),
     h("form",{class:"card",onsubmit(e){e.preventDefault();const v=input.value.trim().toLowerCase();if(!/^[a-z0-9_-]{1,40}$/.test(v)){err.textContent=L.nameBad;return}user=v;store.set("v4.user",user);load().then(render)}},
@@ -202,11 +204,11 @@ function panel(){
         h("span",{class:"tag"},L.request),h("p",{class:"q",id:"query"},q),
         lang==="cn"&&i.query_cn&&i.query_cn!==i.query?h("details",{class:"mute",style:"margin:-6px 0 12px"},h("summary",null,L.orig),i.query):null,
         note?h("div",{class:"note"},h("b",null,L.note+": "),note):null,
-        h("div",{class:"ask",id:"ask"},L.ask[i.part-1]),
+        h("div",{class:"ask",id:"ask"},...emph(L.ask[i.part-1])),
         h("div",{class:"yn"},
           h("button",{type:"button",id:"yes",class:a==="yes"?"on":"","aria-pressed":a==="yes"?"true":"false",onclick(){answer("yes")}},L.yes),
           h("button",{type:"button",id:"no",class:a==="no"?"on":"","aria-pressed":a==="no"?"true":"false",onclick(){answer("no")}},L.no)),
-        h("p",{class:"mute"},L.yes+": "+L.yesHint[i.part-1]),h("p",{class:"mute"},L.no+": "+L.noHint[i.part-1]),
+        h("p",{class:"mute"},L.yes+": ",...emph(L.yesHint[i.part-1])),h("p",{class:"mute"},L.no+": ",...emph(L.noHint[i.part-1])),
         i.part===1&&a==="no"?h("div",{id:"which"},h("p",{style:"margin:12px 0 4px"},h("b",null,L.which)),
           ...[1,2,3,4].map(n=>h("label",{class:"chk"},h("input",{type:"checkbox",id:"v"+n,checked:answers[i.sid].violated.includes(n),onchange(){toggle(n)}}),L.rules[n-1][0])),
           h("button",{type:"button",id:"confirm",disabled:answers[i.sid].violated.length?false:"disabled",onclick:advance},L.confirm)):null,
